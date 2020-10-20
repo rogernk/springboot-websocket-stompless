@@ -1,8 +1,10 @@
 var ws;
+var domainWebsocket;
 
 function setConnected(connected) {
     $("#connect").prop("disabled", connected);
     $("#disconnect").prop("disabled", !connected);
+    $("#send").prop("disabled", !connected);
     if (connected) {
         $("#conversation").show();
     }
@@ -13,11 +15,33 @@ function setConnected(connected) {
 }
 
 function connect() {
-	ws = new WebSocket('ws://localhost:8080/message');
+	document.cookie = 'cookieParam=' + $("#cookieParam").val();
+	
+	urlWebsocket = $("#urlWebsocket").val();
+	resourceWebsocket = $("#resourceWebsocket").val();
+	protocol = 'ws://';
+	if (urlWebsocket.startsWith('ws://')
+			|| urlWebsocket.startsWith('wss://')) {
+		protocol = '';
+	}
+	slash = '/';
+	if (resourceWebsocket.startsWith('/')) {
+		slash = '';
+	}
+	uri = protocol + urlWebsocket + slash + resourceWebsocket;
+	
+	queryParam = $("#queryParam").val();
+	
+	if (queryParam) {
+		uri += '?' + queryParam;
+	}
+	console.log('Connecting in ' + uri);
+	ws = new WebSocket(uri);
 	ws.onmessage = function(data){
 		showGreeting(data.data);
 	}
 	setConnected(true);
+	console.log('Connected');
 }
 
 function disconnect() {

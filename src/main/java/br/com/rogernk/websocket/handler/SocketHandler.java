@@ -39,7 +39,7 @@ public class SocketHandler extends TextWebSocketHandler {
 			System.out.println("Empty Headers!!!");
 		} else {
 			headers = HttpHeaders.writableHttpHeaders(session.getHandshakeHeaders());
-			headers.add("X-CUSTOM-HEADER", "CustomHeaderValue: " + LocalDateTime.now(ZoneId.systemDefault()).toString());	
+			headers.add("X-CUSTOM-HEADER", "CustomHeaderValue: " + LocalDateTime.now(ZoneId.systemDefault()).toString());
 		}
 
 		if (isBroadcastSession) {
@@ -75,12 +75,56 @@ public class SocketHandler extends TextWebSocketHandler {
 			System.out.println("    Value: "+ value);
 		});
 		
+		System.out.println("#############################################");
+		System.out.println("Checking Cookie in Header:");
+		StringBuilder sbCookies = new StringBuilder();
+		if (headers.containsKey("cookie")) {
+			List<String> cookies = (List<String>) headers.get("cookie");
+			for (String cookie : cookies) {
+				sbCookies.append(cookie);
+				sbCookies.append(";");
+			}
+			System.out.println("Cookies encontrados: ");
+			System.out.println("  " + sbCookies.toString());
+		}
+		
+		System.out.println("#############################################");
+		System.out.println("Checking Query Param:");
+		String queryParam = session.getUri().getQuery();
+		String arrayQueryParam[] = null;
+		
+		if (queryParam != null && !queryParam.trim().equals("")) {
+			arrayQueryParam = queryParam.split("&");
+			for (String qParam : arrayQueryParam) {
+				System.out.println("  " + qParam);
+			}
+		} else {
+			System.out.println("Empty Query Param!");
+		}
 		TextMessage textMessage;
 		System.out.println("#############################################");
 		System.out.println("Read Payload Message:");
 		System.out.println(message.getPayload());
 		payloadMessage = mapper.readValue(message.getPayload(), PayloadMessage.class);
-		textMessage = new TextMessage("Hello, " + payloadMessage.getName() + "!");
+		StringBuilder text = new StringBuilder();
+		text.append("Hello, ");
+		text.append(payloadMessage.getName());
+		text.append("!");
+		if (sbCookies.length() > 0) {
+			text.append("</br>Cookies: ");
+			text.append(sbCookies.toString());
+		}
+		if (arrayQueryParam != null) {
+			text.append("</br>Query(ies) Param(s): ");
+			text.append("<ul>");
+			for (String string : arrayQueryParam) {
+				text.append("<li>");
+				text.append(string);
+				text.append("</li>");
+			}
+			text.append("</ul>");
+		}
+		textMessage = new TextMessage(text.toString());
 		
 		System.out.println("#############################################");
 		System.out.println("Publish Payload Message of return:");
